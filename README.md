@@ -1,8 +1,7 @@
 # cs3000-adv-algorithms
 Spring 2025 - CS3000 Advanced Algorithms and Data Structures - assignments
-# CS3000 - Advanced Algorithms and Data Structures
 
-## Chapter Assignments
+Assignments:
 
 - Chapter 2
 - Chapter 3.1
