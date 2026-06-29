@@ -1,0 +1,91 @@
+from matplotlib import pyplot as plt
+import random
+import time
+from collections import Counter
+import itertools
+
+#randomize-in-place psuedocode
+# n = a.length
+# for i = to n 
+#     swap a[i] with a[random(i,1)]
+
+def random_in_place(a):
+    n = len(a)
+    for i in range(n):
+        j = random.randint(i,n - 1)
+        a[i], a[j] = a[j], a[i]
+
+
+#permute-with-all(a) pseudocode
+# n = a.length
+# for i = 1 to n
+#     swap a[i] with a[random(1,n)]
+
+def permute_w_all(a): #array, not length (n)
+    n = len(a)
+    for i in range(n):
+        j = random.randint(0, n - 1)
+        a[i], a[j] = a[j], a[i]
+
+#turn array into string
+def a_to_str(a):
+    return "".join(a)
+
+def testing(rand_items, iterations, items):
+    results = Counter()
+    for _ in range(iterations):
+        a = items [:]
+        rand_items(a)
+        results[a_to_str(a)] += 1
+    return results
+
+
+def main():
+    items = ['A','B','C','D','E']
+    iterations = 1_000_000 #run 1 million times
+
+    rand_results = testing(random_in_place, iterations, items)
+    print("Randomize in Place Results: ")
+    for perm, count in rand_results.items():
+        print(f"{perm}: {count}")
+
+    perm_results = testing(permute_w_all, iterations, items)
+    print("Permutations: ")
+    for perm, count in perm_results.items():
+        print(f"{perm}: {count}")
+
+    plotting(rand_results, perm_results, iterations)
+
+def plotting(rand_results, perm_results, iterations):
+    permutations = sorted(rand_results.keys()) #keys gives results to sort it
+    rand_frequencies = [rand_results[perm] / iterations for perm in permutations] #num of times shows up
+    permute_frequencies = [perm_results[perm] / iterations for perm in permutations]
+
+    plt.figure(figsize=(12,6))
+    plt.bar(
+        permutations,
+        rand_frequencies,
+        alpha=0.7,
+        label = "Randomize in Place",
+        width = 0.4,
+        align= "edge"
+    )
+    plt.bar(
+        permutations,
+        permute_frequencies,
+        alpha=0.7,
+        label = "Permute w/ All",
+        width = 0.4,
+        align= "edge"
+    )
+
+    plt.title("Ch. 5")
+    plt.xlabel("Permutations")
+    plt.ylabel("Frequency")
+    plt.legend()
+    plt.xticks(rotation = 90)
+    plt.tight_layout()
+    plt.show()
+
+if __name__ == "__main__":
+    main()

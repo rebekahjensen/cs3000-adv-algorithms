@@ -1,0 +1,93 @@
+import random
+import time
+
+def random_search(a, current, iterations):
+#random(0,1) produces 0 w/ probability 1/2 to produce 1
+    size = len(a) #array length
+    #true when checked(?)
+    total_checks = 0 #num checked so far
+
+    for _ in range(iterations):
+        counter = 0
+        checks = 0
+        checked_ind = [False] * size #all values false, yet to be checked
+        
+        while counter < size:
+            current_indx = random.randint(0, size - 1) #0 to l en(a)-1
+            checks += 1 #doesn't matter if checked or not
+
+            #increment only if true and yet to be checked
+            if not checked_ind[current_indx]: 
+                checked_ind[current_indx] = True
+                counter += 1 #checked spots
+
+            if a[current_indx] == current:
+                break
+            total_checks += checks #moving out
+
+    return total_checks / iterations #returns avg num of checks
+
+#code determinisitic-search
+#check each element one-by-one
+def determ_search(a, current, iterations):
+    total_checks = 0 #0 checks so far
+
+    for pos in range(iterations):
+        for checks, value in enumerate(a, start = 1):
+            if value == current:
+                break
+            total_checks += checks
+ 
+        
+    return total_checks / iterations
+
+#scrabble search
+#shuffles array and then searches normally
+def scramble_search(a, current, iterations):
+    total_checks = 0 #0 so far
+
+    for pos in range(iterations):
+        scramble = a[:] #copy of a
+        random.shuffle(scramble) #shuffle copy of a
+
+        for checks, value in enumerate(a, start = 1):
+                if value == current:
+                    break
+                total_checks += checks
+
+    return total_checks / iterations
+
+def rand_search_not_found(a, current, iterations):
+    total_checks = 0
+
+    for _ in range(iterations):
+        checks = 0
+        visited = set()
+        while len(visited) < len(a):
+            index = random.randint(0, len(a) -1)
+            checks += 1
+            visited.add(index)
+            if a[index] == current:
+                break
+        total_checks += checks
+    avg_checks = total_checks / iterations #avg num of checks
+
+    print(f"Avg num of locations checked for {current} not found:{avg_checks:.2f}")
+    return avg_checks
+
+if __name__ == "__main__":
+    a = [random.randint(0,1000) for _ in range(1000)]
+    current_yes = random.choice(a)
+    current_no = -1
+
+    iterations = 1000
+
+    avg_checks_rand_yes = random_search(a, current_yes, iterations)
+    avg_checks_determ_yes = determ_search(a, current_yes, iterations)
+    avg_checks_scramble_yes = scramble_search(a, current_yes, iterations)
+    avg_checks_random_no = rand_search_not_found(a, current_no, iterations)
+    
+    print("Random Search Sucessful: ", avg_checks_rand_yes)
+    print("Deterministic Search: ", avg_checks_determ_yes)
+    print("Scramble Search: ", avg_checks_scramble_yes)
+    print("Random Search Unsuccessful: ", avg_checks_random_no)

@@ -1,0 +1,154 @@
+import random
+import sympy 
+import math
+
+#program 1: generate keys
+
+#from ch 31
+def mod_exp(a,b,n):
+    d = 1
+    binary_b = bin(b)[2:] #b to binary str
+
+    for bit in binary_b:
+        d = (d*d) %n #sqaure d mod n
+        if bit == '1':
+            d = (d*a) %n
+    return d 
+
+
+def pseudoprime(n): #first prime checker
+    if mod_exp(2, n-1, n) != 1:
+        return False #not prime
+    else:
+        return True 
+    
+def create_prime():
+    while True:
+        rand = random.randint(2*1023, 2**1024) #2 primes
+        if pseudoprime(rand): #1st prime check
+            if sympy.isprime(rand): #2nd prime check
+                return rand
+    
+#create 2 primes (p & q)    
+p = create_prime()
+q = create_prime()
+while p == q:
+    q = create_prime() #make sure p doesn't equal q
+
+print(f"The number {p} repesents p")
+print(f"The number {q} represents q")
+
+#check primes w/ sympy
+print(f"Is p prime? {sympy.isprime(p)}")
+print(f"Is q prime? {sympy.isprime(q)}")
+
+n = p*q
+print(f"p times q equals {n}")
+
+#phi
+phi_n = (p-1) * (q-1)
+print(f"Phi_n = {phi_n}")
+
+e = 65537 #public e (the bigger the more secure)
+if sympy.gcd(e, phi_n) != 1: #COprime check
+    raise ValueError(f"e {e} is not relatively prime to phi_n {phi_n}!")
+
+#from ch 31
+def euclid(a,b):
+    if b == 0:
+        return a
+    else:
+        return euclid(b, a%b)
+
+def extend_euclid(a,b):
+    if b == 0:
+        return a,1,0
+    else:
+        d_prime,x_prime,y_prime = extend_euclid(b,a%b)
+        d = d_prime
+        x = y_prime
+        y = x_prime - (a//b) * y_prime
+        return d,x,y
+    
+#find d (e*d) % phi_n == 1
+_, d, _ = extend_euclid(e, phi_n)
+
+#is d positive?
+if d < 0:
+    d += phi_n
+
+print(f"Public key (e,n): {e},{n}")
+print(f"Private key (d,n): {d},{n}")
+
+print(f"Public key (e,n): {e},{n}")
+print(f"Private key (d,n): {d},{n}")
+
+#save files
+with open("e.txt", "wb") as f: 
+    f.write(e.to_bytes((e.bit_length() + 7) // 8, "big"))
+
+with open("n.txt", "wb") as f: 
+    f.write(n.to_bytes((n.bit_length() + 7) // 8, "big"))
+
+with open("d.txt", "wb") as f:  
+    f.write(d.to_bytes((d.bit_length() + 7) // 8, "big"))
+
+# #SAVE FILES, also in binary! like in the next steps
+# #I'll just do it here for simplicity
+# with open("public_key.txt", "wb") as f: #public (e,n)
+#     f.write(e.to_bytes((e.bit_length() + 7) // 8, "big"))
+#     f.write(n.to_bytes((n.bit_length() + 7) // 8, "big"))
+
+# with open("private_key.txt", "wb") as f: #private (d,n)
+#     f.write(d.to_bytes((d.bit_length() + 7) // 8, "big"))
+#     f.write(n.to_bytes((n.bit_length() + 7) // 8, "big"))
+
+##############
+#program 2: public key
+
+#read provided files (e,n,d) LOL
+def read_file(file_name):
+    with open(file_name, 'rb') as f:
+        key = int.from_bytes(f.read(),'big') #read as int
+    return key
+
+def read_message(file_name):
+    with open(file_name, 'rb') as f:
+        message = int.from_bytes(f.read(), 'big')
+    return message
+
+
+def usePublicKey(file_name, e,n, operation = 'encrypt'):
+    message = read_message(file_name)
+
+    #encrpyt: m^e mod(n)
+    if operation == 'encrypt':
+        result = mod_exp(message, e, n)
+        output_file = 'encryptedWithPublic.txt'
+
+    elif operation == 'decrypt':
+        result = mod_exp(message, d,n)
+        output_file = 'encryptedWithPrivate.txt'
+
+    result_bytes = result.to_bytes((result.bit_length() + 7) // 8, 'big')
+    with open(output_file, 'wb') as f:
+        f.write(result_bytes)
+
+    print(f"This message has been saved in {output_file}")
+
+#############################
+#program 3: usePrivateKey
+def usePrivateKey(file_name, d,n):
+    message = read_message(file_name)
+
+    decrypted_message = mod_exp(message, d,n)
+    print(f"Decryped message: {decrypted_message}")
+
+    #convert back to binary
+    decrypted_message_bytes = decrypted_message.to_bytes((decrypted_message.bit_length() + 7) // 8, 'big')
+
+    with open('decrypted_message.txt', 'wb') as f:
+        f.write(decrypted_message_bytes)
+
+    print(f"Decrypted messsage has been saved in a text file!")
+

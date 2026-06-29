@@ -1,0 +1,145 @@
+import random
+import time
+import csv
+import matplotlib.pyplot as plt
+
+#bucket sort pseudocode
+# let B[0..n-1] be a new array
+# n = A.length
+# for i = 0 to n-1
+#     make B[i] an empty list
+# for i = 1 to n
+#     insert A[i] into list B[(floor division)n A [i] ****]
+# for i = 0 to n -1
+#     sort list B[i] with insertion sort
+# concatenate the lists B[0], B[1],...,B[n-1] together in order
+
+def insertion_sort(a): #from ch 2 assignment
+    for j in range(1,len(a)): #2nd element start
+        current=a[j]
+        i=j-1 #move left
+        while i>=0 and a[i]>current: #move elements > current right
+            a[i+1]=a[i] #move right
+            i -= 1 #move left
+        a[i+1] = current #current
+    return a
+
+def bucket_sort(a):
+    n = len(a) #number of elements (length of a)
+    b = [[] for _ in range(n)] #create empty buckets to hold each n
+
+    for i in range(n): #iterate over each element in a
+        index = int(n *a[i][0]) #between 0 & 1(UNIT SQUARE), bucket index for each element of a
+        index = min(n-1, int(n*a[i][0])) #check index is within bounds of bucket array
+        b[index].append(a[i]) #appends element in correct bucket
+
+    for i in range(n): #use insertion sort
+        b[i] = insertion_sort(b[i])
+
+    sorted_a=[] #concatenate!
+
+    for i in range(n):
+        sorted_a.extend(b[i]) #extend appends elements from one list to another (concatanation)
+    return sorted_a
+
+#let's try testing with merge_sort to compare
+def merge(a,p,q,r): #divide & conquer
+    n1 = q - p + 1 #sub array 1
+    n2 = r - q
+    left = [0] * (n1 + 1) #create blank arrays
+    right = [0] * (n2 + 1)
+
+    for i in range(0, n1): #left array
+        left[i] = a[p + i]
+    for j in range (0, n2): #right array
+        right[j] = a[q + 1 + j]
+
+    left[n1] = (float('inf'), float('inf')) #allow space for other array
+    right[n2] = (float('inf'), float('inf'))
+    i = 0 #merge arrays back
+    j = 0
+
+    for k in range (p,r + 1):
+        if left[i][0] <= right[j][0]:
+            a[k] = left[i]
+            i = i + 1
+        else:
+            a[k] = right[j]
+            j = j + 1
+
+def merge_sort(a,p,r):
+    if p < r:
+        q = (p + r) // 2 #// for floor division
+        merge_sort(a,p,q)
+        merge_sort(a,q+1,r)
+        merge(a,p,q,r)
+
+all_data=[] #list to hold everything in my files
+files = ['points_10.csv','points_100.csv','points_1000.csv', 'points_100000.csv']#,'points_10000000.csv']
+# files = ['points_10000000.csv']
+
+for file_name in files:
+    with open(file_name, 'r') as file:
+        reader = csv.reader(file)
+        #next(reader) #skip header (there's not one)
+        data = [(float(row[0]), float(row[1])) for row in reader] #read both columns
+        # all_data.extend(data) #combine! into single list
+
+    num_points =len(data)
+
+    #bucket
+    # data_copy = data.copy()
+    start_time = time.perf_counter()
+    sorted_data = bucket_sort(data)
+    bucket_sort_time = time.perf_counter() - start_time
+
+    #vs merge
+    # data_copy = data.copy()
+    start_time = time.perf_counter()
+    merge_sort(data, 0, len(data) - 1)
+    merge_sort_time = time.perf_counter() - start_time
+
+    all_data.append({
+        'file':file_name,
+        'num_points':num_points,
+        'bucket_sort_time':bucket_sort_time,
+        'merge_sort_time':merge_sort_time
+    })
+
+num_points = [d['num_points'] for d in all_data]
+bucket_times = [d['bucket_sort_time'] for d in all_data]
+merge_times = [d['merge_sort_time'] for d in all_data]
+
+#plotting
+plt.figure(figsize=(8, 6))
+plt.plot(num_points, bucket_times, label="Bucket Sort", marker="o", linestyle="-")
+plt.plot(num_points, merge_times, label="Merge Sort", marker="s", linestyle="-")
+
+plt.xlabel("# of Points")
+plt.ylabel("Time (s)")
+plt.title("Bucket Sort VS Merge Sort")
+plt.legend()
+plt.xscale("log")  # Log scale makes the trend clearer
+plt.yscale("log")  # Log scale helps if times vary significantly
+plt.grid(True, which="both", linestyle="--", linewidth=0.5)
+plt.show()
+
+#create file to store data 
+with open('Bucket_VS_Merge.csv,', mode='w',newline='') as file:
+    writer = csv.DictWriter(file,fieldnames=['file','num_points','bucket_sort_time','merge_sort_time'])
+    writer.writeheader()
+    for entry in all_data:
+        writer.writerow(entry)
+print("You did it!! YAY!! It works!")
+
+
+
+
+
+
+
+
+
+
+
+

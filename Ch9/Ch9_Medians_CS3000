@@ -1,0 +1,91 @@
+import time
+import random
+
+# minimum psuedocode (a.length = n)
+# minimum = a[1]
+# for i = 2 to a.length
+#     if minimum > a[i]
+#         minimum = a[i]
+# return minimum
+
+def find_minimum(a):
+    n = len(a) #n num of elements
+    minimum = a[0] #0 indexing, 1st element
+    for i in range(1,n):
+        if minimum > a[i]:
+            minimum = a[i]
+    return minimum
+
+def find_max(a):
+    n = len(a)
+    maximum = a[0] #1st element for now
+    for i in range(1,n):
+        if maximum < a[i]:
+            maximum = a[i]
+    return maximum
+
+# def find_minimum_and_max(a):
+#     n = len(a)
+
+#     if n % 2 == 0: #if even, compare first 2 elements
+#         # if a[0] < a[1]: #element 1 < element 2
+#         minimum, maximum = min(a[0], a[1]), max(a[0], a[1]) #we know minimum and max
+#         start_index = 2#start loop from index 2 know that we know
+    
+#     else: #if odd, look @ first element
+#         minimum = maximum = a[0]
+#         start_index = 1 #start loop from index 1
+
+#     #now put elements into pairs
+#     for i in range(start_index, n, 2):
+#         if i + 1 < n :
+#             pair_min = min(a[i], a[i+1])
+#             pair_max = max(a[i], a[i+1])
+
+#             #update globl min and max based on above result
+#             minimum = min(minimum, pair_min)
+#             maximum = max(maximum, pair_max)
+
+#     return minimum, maximum
+
+def find_minimum_and_max(a):
+    n = len(a)
+    if n == 0:
+        return None, None  #if empty
+
+    minimum = maximum = a[0]
+
+    for i in range(1, n): #loop and update
+        if a[i] < minimum:
+            minimum = a[i]
+        elif a[i] > maximum:
+            maximum = a[i]
+
+    return minimum, maximum
+
+def measure_time(a):
+    #minimum
+    start_time = time.time()
+    minimum_time = find_minimum(a)
+    find_minimum_time = time.time() - start_time
+
+    #max 
+    start_time = time.time()
+    max_time = find_max(a)
+    find_max_time = time.time() - start_time
+
+    #minimum and max 
+    start_time = time.time()
+    minimum_and_max_time = find_minimum_and_max(a)
+    find_minimum_and_max_time = time.time() - start_time
+
+    return find_minimum_time, find_max_time, find_minimum_and_max_time
+
+#now let's load some random ints and see how it goes
+a = [random.randint(1,10000) for _ in range(1000000)]
+
+minimum_time, max_time, minimum_and_max_time = measure_time(a)
+
+print("Time to find minimum & max: ",minimum_time + max_time)
+print("Time to find minimum & max simultaneously: ",minimum_and_max_time)
+

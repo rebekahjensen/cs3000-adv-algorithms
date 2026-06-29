@@ -1,0 +1,65 @@
+from matplotlib import pyplot as plt
+import random
+import time
+
+#dr b code
+def makeIntArrayForMaxSubArray(size):
+    a = []
+    for i in range(size):
+        a.append(random.randint(-20,20))
+    return a
+
+def bruteForceAlg(a):
+    if a == []:
+        return 0
+    max_sum = float('-inf')
+    start_index = 0 #hold space
+    end_index = 0
+    n = len(a) #a is the length of the array
+
+    for i in range(n):
+        current = 0 #find sum of smallest value (0)
+
+        for j in range(i, n): #i first, j last
+            current = current + a[j] #array of j (last?)
+            if current > max_sum:
+                max_sum = current
+                start_index = i
+                end_index = j
+    return max_sum, start_index, end_index
+
+#test recording time
+def measure_time():
+    sizes = [5, 10, 15, 20, 25, 30]
+    rec_times = []
+    max_sums_val = []
+    avg_indices = [] #seperates values physically
+
+    for size in sizes:
+        a = makeIntArrayForMaxSubArray(size)
+        startTime = time.time()
+        max_sum, start_index, end_index = bruteForceAlg(a)
+        endTime = time.time()
+        totalTime = endTime - startTime
+
+        rec_times.append(totalTime)
+        max_sums_val.append(max_sum)
+        avg_indices.append((start_index + end_index) / 2 if start_index != -1 else 0)
+                           
+    
+    return sizes, rec_times, max_sums_val, avg_indices
+
+# def plotting():
+sizes, rec_times, max_sums_val, avg_indices = measure_time()
+
+plt.figure(figsize = (10,6))
+plt.plot(sizes, rec_times, marker = "o", label = "Execution Time (s)", color = "pink")
+plt.plot(sizes, max_sums_val, marker = "x", label = "Max Subarray Sum", color="blue")
+plt.plot(sizes, avg_indices, marker = "s", label = "Avg Indices", color = "purple")
+
+plt.title("Performance of Brute Force")
+plt.xlabel("Array Size")
+plt.ylabel("Values")
+plt.legend()
+plt.grid(True)
+plt.show()

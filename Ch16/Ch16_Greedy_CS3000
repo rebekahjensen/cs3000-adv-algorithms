@@ -1,0 +1,40 @@
+import random
+
+def furthest_in_future(r, k):
+    cache = set() #empty set
+    cache_misses = 0 #initialize
+
+    for i in range(len(r)):
+        request = r[i]
+
+        if request in cache: #check if already in cache
+            continue #do nothing
+
+        cache_misses += 1 #cache miss
+
+        if len(cache) < k:
+            cache.add(request) #there is space
+        else:
+            pot_vic = None #farthest in future (potential victim for eviction)
+            latest = -1
+
+            for element in cache: #next element in r
+                try:
+                    next_use = next(j for j in range(i+1,len(r)) if r[j] == element)
+                except StopIteration:
+                    next_use = float('inf') #if never see again, evict
+
+                if next_use > latest:
+                    latest = next_use
+                    pot_vic = element
+
+            cache.remove(pot_vic) #evict 
+            cache.add(request) #add new element
+
+    return cache_misses
+
+for test in range(3):
+    r = [random.randint(0,20) for _ in range(50)]
+    cache_size = 10
+    misses = furthest_in_future(r, cache_size)
+    print(f"Test {test + 1}: {misses} cache misses")

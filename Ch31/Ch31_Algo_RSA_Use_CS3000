@@ -1,0 +1,72 @@
+#euclid's (GCD) pseudocode
+# if b == 0:
+#     return a
+# else return euclid(b, a mod b)
+
+def euclid(a,b):
+    if b == 0:
+        return a
+    else:
+        return euclid(b, a%b)
+    
+#extended euclid pseudocode
+# if b == 0:
+#     return (a,1,0)
+# else (d',x',y') = extended-euclid(b,a mod b)
+#       (d,x,y) = (d',y',x'- (floor of a/b) y')
+#       return(d,x,y)
+
+def extend_euclid(a,b):
+    if b == 0:
+        return a,1,0
+    else:
+        d_prime,x_prime,y_prime = extend_euclid(b,a%b)
+        d=d_prime
+        x=y_prime
+        y=x_prime - (a//b) * y_prime
+        return d,x,y
+    
+#modular exponentiation(a,b,n) pseudocode
+# d = 1
+# let (bk, bk-1...,b0) be the binary representation of b
+# for i = k downto 0
+#     d = (d*d) mod n
+#     if bi == 1
+#         d=(d*a) mod n 
+# return d
+
+def mod_exp(a,b,n):
+    d = 1
+    binary_b = bin(b)[2:] #b to binary str
+
+    for bit in binary_b:
+        d = (d*d) %n #sqaure d mod n
+        if bit == '1':
+            d = (d*a) %n 
+    return d 
+
+#prime pseudocode
+# if modular-expo(2,n-1,n) mod n
+#     return composite
+# else return prime
+
+def pseudoprime(n):
+    if mod_exp(2, n-1, n) != 1:
+        return "Composite" #not prime
+    else:
+        return "Prime" 
+
+def main():
+    a = 4
+    b = 13
+    n = 7
+    gcd,x,y = extend_euclid(a,b)
+    print(f"The GCD of {a} and {b} is {gcd}, x = {x}, y = {y}")
+    print(f"The GCD of {a} and {b} is {euclid(a,b)}")
+#modular exponentiation
+    print(f"{a} ^ {b} mod {n} = {mod_exp(a,b,n)}")
+#pseudoprime
+    print(f"{n} is {pseudoprime(n)}")
+
+if __name__ == "__main__":
+    main()
