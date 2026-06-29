@@ -1,0 +1,126 @@
+import math
+import random
+import time
+from multiprocessing import Pool, cpu_count
+
+# Defining the Serial Distance 
+def calculateDistanceSerial(x_coords, y_coords, x_centroids, y_centroids):
+    distances = []
+    for i in range(len(x_coords)):
+        pd = []
+        for j in range(len(x_centroids)):
+            pd.append(math.hypot(x_coords[i] - x_centroids[j],
+                                  y_coords[i] - y_centroids[j]))
+        distances.append(pd)
+    return distances
+
+def assignAndRecomputeSerial(x_coords, y_coords, x_centroids, y_centroids, centNum):
+    
+    distances = calculateDistanceSerial(x_coords, y_coords, x_centroids, y_centroids)
+    assignments = [row.index(min(row)) for row in distances]
+    # Computing Centroids 
+    
+    sums_x = [0.0]*centNum
+    sums_y = [0.0]*centNum
+    counts = [0]*centNum
+    for i, c in enumerate(assignments):
+        sums_x[c] += x_coords[i]
+        sums_y[c] += y_coords[i]
+        counts[c] += 1
+    new_x = [sums_x[j]/counts[j] if counts[j] else x_centroids[j] for j in range(centNum)]
+    new_y = [sums_y[j]/counts[j] if counts[j] else y_centroids[j] for j in range(centNum)]
+    return new_x, new_y, assignments
+
+# Paraller worker 
+globalX = None
+globaly = None
+
+def _init_worker(data):
+    global globalX, globaly
+    globalX, globaly = data
+
+def _worker_partial(args):
+    start, end, x_c, y_c, centNum = args
+    sums_x = [0.0]*centNum
+    sums_y = [0.0]*centNum
+    counts = [0]*centNum
+    for i in range(start, end):
+        # Finding the nearest centroid 
+        mini_j = 0
+        mini_d = math.hypot(globalX[i]-x_c[0], globaly[i]-y_c[0])
+        for j in range(1, centNum):
+            d = math.hypot(globalX[i]-x_c[j], globaly[i]-y_c[j])
+            if d < mini_d:
+                mini_d, mini_j = d, j
+        sums_x[mini_j] += globalX[i]
+        sums_y[mini_j] += globaly[i]
+        counts[mini_j] += 1
+    return sums_x, sums_y, counts
+
+# Selecting the file to analize 
+def fileToList(fname="clustering.txt"):
+    with open(fname,"r") as f:
+        l0, l1 = f.read().splitlines()
+    x = list(map(float, l0.split()))
+    y = list(map(float, l1.split()))
+    return x, y
+
+
+def findCentroids(x, y):
+    N = len(x)
+    centNum = 2 if N<=10 else 3 if N<=20 else 4
+    picks = random.sample(range(N), centNum)
+    return [x[i] for i in picks], [y[i] for i in picks], centNum
+
+if __name__ == "__main__":
+    x_coords, y_coords = fileToList()
+    x0, y0, centNum = findCentroids(x_coords, y_coords)
+
+    # Calculating the serial time 
+    x_s, y_s = x0.copy(), y0.copy()
+    start = time.time()
+    for _ in range(10):
+        x_s, y_s, a_s = assignAndRecomputeSerial(x_coords, y_coords, x_s, y_s, centNum)
+    t_serial = time.time() - start
+
+    # Calculating the parallel timing
+    data = (x_coords, y_coords)
+    pool = Pool(processes=cpu_count(), initializer=_init_worker, initargs=(data,))
+    x_p, y_p = x0.copy(), y0.copy()
+    n = len(x_coords)
+    workers = cpu_count()
+    chunk = max(1, n // workers)
+    start = time.time()
+    for _ in range(10):
+        tasks = [
+            (i, min(i+chunk, n), x_p, y_p, centNum)
+            for i in range(0, n, chunk)
+        ]
+        partials = pool.map(_worker_partial, tasks)
+        sums_x = [0.0]*centNum
+        sums_y = [0.0]*centNum
+        counts = [0]*centNum
+        for sx, sy, cnt in partials:
+            for j in range(centNum):
+                sums_x[j] += sx[j]
+                sums_y[j] += sy[j]
+                counts[j] += cnt[j]
+        x_p = [sums_x[j]/counts[j] if counts[j] else x_p[j] for j in range(centNum)]
+        y_p = [sums_y[j]/counts[j] if counts[j] else y_p[j] for j in range(centNum)]
+    t_parallel = time.time() - start
+
+    pool.close()
+    pool.join()
+
+    # Output
+    print(f"Serial time:   {t_serial:.4f}s")
+    print(f"Parallel time: {t_parallel:.4f}s")
+    print(f"Speedup:       {t_serial/t_parallel:.2f}×\n")
+
+    print("Final centroids (serial vs parallel):")
+    for i,(xs,ys,xp,yp) in enumerate(zip(x_s,y_s,x_p,y_p)):
+        print(f" C{i}: ({xs:.4f},{ys:.4f}) | ({xp:.4f},{yp:.4f})")
+
+    print("\nFirst 20 assignments:")
+    print(" serial:  ", a_s[:20])
+    
