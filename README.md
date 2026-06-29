@@ -15,4 +15,6 @@ Assignments:
 - Chapter 31
 - Chapter 31 - RSA Encryption
 
+Included in each assignment is a programming report with an overview of the code.
+
 Archived coursework from Southern Utah University.
