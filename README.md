@@ -14,6 +14,7 @@ Assignments:
 - Chapter 16
 - Chapter 31
 - Chapter 31 - RSA Encryption
+- Final
 
 Included in each assignment is a programming report with an overview of the code.
 
